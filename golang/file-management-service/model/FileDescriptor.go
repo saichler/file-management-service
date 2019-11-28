@@ -101,14 +101,18 @@ func (fileDescriptor *FileDescriptor) _sourcePath(buff *bytes.Buffer) {
 	buff.WriteString(fileDescriptor.name)
 }
 
-func (fileDescriptor *FileDescriptor) Marshal() []byte {
+func (fileDescriptor *FileDescriptor) Bytes() []byte {
 	bs := utils.NewByteSlice()
-	bs.AddString(fileDescriptor.SourcePath())
-	fileDescriptor.SourceRoot().marshal(bs)
+	fileDescriptor.AddBytes(bs)
 	return bs.Data()
 }
 
-func (fileDescriptor *FileDescriptor) marshal(bs *utils.ByteSlice) {
+func (fileDescriptor *FileDescriptor) AddBytes(bs *utils.ByteSlice) {
+	bs.AddString(fileDescriptor.SourcePath())
+	fileDescriptor.SourceRoot().bytes(bs)
+}
+
+func (fileDescriptor *FileDescriptor) bytes(bs *utils.ByteSlice) {
 	bs.AddString(fileDescriptor.name)
 	bs.AddInt64(fileDescriptor.size)
 	bs.AddString(fileDescriptor.hash)
@@ -119,21 +123,20 @@ func (fileDescriptor *FileDescriptor) marshal(bs *utils.ByteSlice) {
 		bs.AddInt(len(fileDescriptor.files))
 		for name, fdChild := range fileDescriptor.files {
 			bs.AddString(name)
-			fdChild.marshal(bs)
+			fdChild.bytes(bs)
 		}
 	}
 }
 
-func UnmarshalFileDescriptor(data []byte) *FileDescriptor {
-	bs := utils.NewByteSliceWithData(data, 0)
+func Object(bs *utils.ByteSlice) *FileDescriptor {
 	path := bs.GetString()
 	root := &FileDescriptor{}
-	root.unmarshal(bs)
+	root.object(bs)
 	child := root.Get(path)
 	return child
 }
 
-func (fileDescriptor *FileDescriptor) unmarshal(bs *utils.ByteSlice) {
+func (fileDescriptor *FileDescriptor) object(bs *utils.ByteSlice) {
 	fileDescriptor.name = bs.GetString()
 	fileDescriptor.size = bs.GetInt64()
 	fileDescriptor.hash = bs.GetString()
@@ -143,7 +146,7 @@ func (fileDescriptor *FileDescriptor) unmarshal(bs *utils.ByteSlice) {
 	for i := 0; i < size; i++ {
 		key := bs.GetString()
 		child := &FileDescriptor{}
-		child.unmarshal(bs)
+		child.object(bs)
 		fileDescriptor.files[key] = child
 		child.sourceParent = fileDescriptor
 	}

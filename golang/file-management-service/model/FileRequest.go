@@ -28,16 +28,14 @@ func (fr *FileRequest) CalcHash() bool {
 	return fr.calcHash
 }
 
-func (fr *FileRequest) Marshal() []byte {
-	bs := utils.NewByteSlice()
+func (fr *FileRequest) Bytes(bs *utils.ByteSlice) []byte {
 	bs.AddString(fr.path)
 	bs.AddInt(fr.dept)
 	bs.AddBool(fr.calcHash)
 	return bs.Data()
 }
 
-func (fr *FileRequest) UnMarshal(data []byte) {
-	bs := utils.NewByteSliceWithData(data, 0)
+func (fr *FileRequest) Object(bs *utils.ByteSlice) {
 	fr.path = bs.GetString()
 	fr.dept = bs.GetInt()
 	fr.calcHash = bs.GetBool()

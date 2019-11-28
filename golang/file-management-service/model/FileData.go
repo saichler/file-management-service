@@ -49,17 +49,14 @@ func (fileData *FileData) LoadData() {
 	fileData.data = data
 }
 
-func (fileData *FileData) Marshal() []byte {
-	bs := utils.NewByteSlice()
+func (fileData *FileData) Bytes(bs *utils.ByteSlice) {
 	bs.AddInt(fileData.part)
 	bs.AddInt64(fileData.size)
 	bs.AddString(fileData.path)
 	bs.AddByteSlice(fileData.data)
-	return bs.Data()
 }
 
-func (fileData *FileData) Unmarshal(data []byte) {
-	bs := utils.NewByteSliceWithData(data, 0)
+func (fileData *FileData) Object(bs *utils.ByteSlice) {
 	fileData.part = bs.GetInt()
 	fileData.size = bs.GetInt64()
 	fileData.path = bs.GetString()
