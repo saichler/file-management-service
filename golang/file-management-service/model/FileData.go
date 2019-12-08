@@ -1,7 +1,7 @@
 package model
 
 import (
-	utils "github.com/saichler/utils/golang"
+	. "github.com/saichler/utils/golang"
 	"os"
 )
 
@@ -49,14 +49,25 @@ func (fileData *FileData) LoadData() {
 	fileData.data = data
 }
 
-func (fileData *FileData) Bytes(bs *utils.ByteSlice) {
+func (fileData *FileData) ToBytes() []byte {
+	bs := NewByteSlice()
+	fileData.Write(bs)
+	return bs.Data()
+}
+
+func (fileData *FileData) FromBytes(data []byte) {
+	bs := NewByteSliceWithData(data, 0)
+	fileData.Read(bs)
+}
+
+func (fileData *FileData) Write(bs *ByteSlice) {
 	bs.AddInt(fileData.part)
 	bs.AddInt64(fileData.size)
 	bs.AddString(fileData.path)
 	bs.AddByteSlice(fileData.data)
 }
 
-func (fileData *FileData) Object(bs *utils.ByteSlice) {
+func (fileData *FileData) Read(bs *ByteSlice) {
 	fileData.part = bs.GetInt()
 	fileData.size = bs.GetInt64()
 	fileData.path = bs.GetString()

@@ -70,10 +70,10 @@ var total = 0
 
 func (msgHandler *CP_MH) Handle(message *Message) {
 	fileData := &model2.FileData{}
-	fileData.Unmarshal(message.Data())
+	fileData.Read(message.ByteSlice())
 	fileData.LoadData()
 	total += len(fileData.Data())
-	msgHandler.fs.ServiceManager().Reply(message, fileData.Marshal())
+	msgHandler.fs.ServiceManager().Reply(message, fileData.ToBytes())
 }
 
 func (msgHandler *CP_MH) Request(args ...interface{}) (interface{}, error) {
@@ -86,11 +86,11 @@ func (msgHandler *CP_MH) Request(args ...interface{}) (interface{}, error) {
 	part := args[1].(int)
 
 	fileData := model2.NewFileData(descriptor.SourcePath(), part, descriptor.Size())
-	response, e := msgHandler.fs.ServiceManager().Request(msgHandler.Topic(), msgHandler.fs, msgHandler.fs.PeerServiceID(), fileData.Marshal(), false)
+	response, e := msgHandler.fs.ServiceManager().Request(msgHandler.Topic(), msgHandler.fs, msgHandler.fs.PeerServiceID(), fileData.ToBytes(), false)
 	if e != nil {
 		return nil, e
 	}
-	fileData.Unmarshal(response)
+	fileData.Read(NewByteSliceWithData(response, 0))
 	return fileData, nil
 }
 

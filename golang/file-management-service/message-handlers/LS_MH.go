@@ -34,12 +34,12 @@ func (msgHandler *LS_MH) Message(destination *ServiceID, data []byte, isReply bo
 
 func (msgHandler *LS_MH) Handle(message *Message) {
 	fr := &model2.FileRequest{}
-	fr.UnMarshal(message.Data())
+	fr.FromBytes(message.Data())
 	fd := model2.NewFileDescriptor(fr.Path(), fr.Dept(), fr.CalcHash())
 	if fd == nil {
 		fd = &model2.FileDescriptor{}
 	}
-	data := fd.Marshal()
+	data := fd.ToBytes()
 	msgHandler.fs.ServiceManager().Reply(message, data)
 }
 
@@ -60,12 +60,12 @@ func (msgHandler *LS_MH) Request(args ...interface{}) (interface{}, error) {
 		Print("Fetching " + path + " Information, this may take a min if its a directory...")
 	}
 	request := model2.NewFileRequest(path, dept, calcHash)
-	response, e := msgHandler.fs.ServiceManager().Request(msgHandler.Topic(), msgHandler.fs, peerID, request.Marshal(), false)
+	response, e := msgHandler.fs.ServiceManager().Request(msgHandler.Topic(), msgHandler.fs, peerID, request.ToBytes(), false)
 	Println("Done!")
 	if e != nil {
 		return nil, e
 	}
-	fd := model2.UnmarshalFileDescriptor(response)
+	fd := model2.ReadFileDescriptor(NewByteSliceWithData(response, 0))
 	return fd, nil
 }
 

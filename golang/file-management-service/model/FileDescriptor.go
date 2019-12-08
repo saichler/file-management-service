@@ -2,7 +2,7 @@ package model
 
 import (
 	"bytes"
-	utils "github.com/saichler/utils/golang"
+	. "github.com/saichler/utils/golang"
 	"strings"
 )
 
@@ -101,18 +101,18 @@ func (fileDescriptor *FileDescriptor) _sourcePath(buff *bytes.Buffer) {
 	buff.WriteString(fileDescriptor.name)
 }
 
-func (fileDescriptor *FileDescriptor) Bytes() []byte {
-	bs := utils.NewByteSlice()
-	fileDescriptor.AddBytes(bs)
+func (fileDescriptor *FileDescriptor) ToBytes() []byte {
+	bs := NewByteSlice()
+	fileDescriptor.Write(bs)
 	return bs.Data()
 }
 
-func (fileDescriptor *FileDescriptor) AddBytes(bs *utils.ByteSlice) {
+func (fileDescriptor *FileDescriptor) Write(bs *ByteSlice) {
 	bs.AddString(fileDescriptor.SourcePath())
-	fileDescriptor.SourceRoot().bytes(bs)
+	fileDescriptor.SourceRoot().write(bs)
 }
 
-func (fileDescriptor *FileDescriptor) bytes(bs *utils.ByteSlice) {
+func (fileDescriptor *FileDescriptor) write(bs *ByteSlice) {
 	bs.AddString(fileDescriptor.name)
 	bs.AddInt64(fileDescriptor.size)
 	bs.AddString(fileDescriptor.hash)
@@ -123,20 +123,20 @@ func (fileDescriptor *FileDescriptor) bytes(bs *utils.ByteSlice) {
 		bs.AddInt(len(fileDescriptor.files))
 		for name, fdChild := range fileDescriptor.files {
 			bs.AddString(name)
-			fdChild.bytes(bs)
+			fdChild.write(bs)
 		}
 	}
 }
 
-func Object(bs *utils.ByteSlice) *FileDescriptor {
+func ReadFileDescriptor(bs *ByteSlice) *FileDescriptor {
 	path := bs.GetString()
 	root := &FileDescriptor{}
-	root.object(bs)
+	root.read(bs)
 	child := root.Get(path)
 	return child
 }
 
-func (fileDescriptor *FileDescriptor) object(bs *utils.ByteSlice) {
+func (fileDescriptor *FileDescriptor) read(bs *ByteSlice) {
 	fileDescriptor.name = bs.GetString()
 	fileDescriptor.size = bs.GetInt64()
 	fileDescriptor.hash = bs.GetString()
@@ -146,7 +146,7 @@ func (fileDescriptor *FileDescriptor) object(bs *utils.ByteSlice) {
 	for i := 0; i < size; i++ {
 		key := bs.GetString()
 		child := &FileDescriptor{}
-		child.object(bs)
+		child.read(bs)
 		fileDescriptor.files[key] = child
 		child.sourceParent = fileDescriptor
 	}
